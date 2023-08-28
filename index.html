@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GDP per Capita Comparison: Hong Kong, Korea, Japan, Singapore, and mainland China</title>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+
+<body>
+  <h1>GDP per Capita Comparison: Hong Kong, Korea, Japan, Singapore, and mainland China</h1>
+  <p>This web page serves as a platform for visualizing and exploring the economic trends and comparisons among the regions of Hong Kong, South Korea, Japan, Singapore, and mainland China.</p>
+    
+  <p>Specifically, the focus is on the evolution of GDP per capita across these regions following Hong Kong's historic transition of sovereignty from the United Kingdom to China in 1997.</p>
+    
+  <p>This significant event marked a turning point in Hong Kong's economic landscape and provides a unique backdrop for examining the subsequent trajectories of economic growth.</p>
+  
+  <!-- Div for the D3.js line chart -->
+  <div id="d3_chart"></div>
+  
+  <!-- Div for the Google Charts line chart -->
+  <div id="google_chart"></div>
+
+  <script>
+    // Load data from CSV file
+    d3.csv('file:///Users/apple/Desktop/DSCI554A1/filtered_data.csv').then(data => {
+
+      // Convert string values to numbers
+      data.forEach(d => {
+        d.Year = +d.Year;
+        d.Value = +d.Value.replace(/,/g, ''); // Remove commas from the value
+      });
+
+      // Set up the SVG canvas dimensions
+      const margin = { top: 20, right: 30, bottom: 40, left: 40 };
+      const width = 800 - margin.left - margin.right;
+      const height = 400 - margin.top - margin.bottom;
+
+      // Create the SVG canvas for D3.js chart
+      const svgD3 = d3.select("#d3_chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Implement the D3.js line chart creation here
+      // You will need to use the 'data' variable and create a line chart
+
+      // Load Google Charts library and call the line chart creation function
+      google.charts.load('current', { packages: ['corechart'] });
+      google.charts.setOnLoadCallback(() => createLineChart(data, ['Hong Kong', 'South Korea', 'Japan', 'Singapore', 'China']));
+    });
+
+    // Function to create Google Charts line chart
+    function createLineChart(data, countries) {
+      // Create a data table
+      const dataTable = new google.visualization.DataTable();
+      dataTable.addColumn('string', 'Year');
+      countries.forEach(country => {
+        dataTable.addColumn('number', country);
+      });
+
+      const years = Array.from(new Set(data.map(d => d['Year'])));
+      years.forEach(year => {
+        const row = [year];
+        countries.forEach(country => {
+          const value = data.find(d => d['Country'] === country && d['Year'] === year);
+          row.push(value ? parseFloat(value['Value']) : null);
+        });
+        dataTable.addRow(row);
+      });
+
+      // Set up chart options
+      const options = {
+        title: 'GDP per Capita Comparison',
+        curveType: 'function',
+        legend: { position: 'bottom' },
+        hAxis: { title: 'Year' },
+        vAxis: { title: 'GDP per Capita (US dollars)' },
+      };
+
+      // Create and draw the Google Charts line chart
+      const chart = new google.visualization.LineChart(document.getElementById('google_chart'));
+      chart.draw(dataTable, options);
+    }
+  </script>
+</body>
+</html>
