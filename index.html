@@ -22,14 +22,11 @@
 
   <script>
     // Load data from CSV file
-    d3.csv('file:///Users/apple/Desktop/DSCI554A1/filtered_data.csv').then(data => {
-
-      // Convert string values to numbers
-      data.forEach(d => {
-        d.Year = +d.Year;
-        d.Value = +d.Value.replace(/,/g, ''); // Remove commas from the value
-      });
-
+    d3.csv('https://raw.githubusercontent.com/harperdaboss/DSCI554A1/main/filtered_data.csv', d => ({
+      Country: d.Country,
+      Year: parseInt(d.Year), // Parse as integer
+      Value: +d['GDP per capita (US dollars)']
+    })).then(data => {
       // Set up the SVG canvas dimensions
       const margin = { top: 20, right: 30, bottom: 40, left: 40 };
       const width = 800 - margin.left - margin.right;
@@ -43,8 +40,35 @@
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
-      // Implement the D3.js line chart creation here
-      // You will need to use the 'data' variable and create a line chart
+      // Set up scales for x and y axes
+      const xScale = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.Year))
+        .range([0, width]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.Value)])
+        .range([height, 0]);
+
+      // Define the line generator
+      const line = d3.line()
+        .x(d => xScale(d.Year))
+        .y(d => yScale(d.Value));
+
+      // Append an SVG path element to represent the line chart
+      svgD3.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("d", line);
+
+      // Add x-axis
+      svgD3.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .call(d3.axisBottom(xScale));
+
+      // Add y-axis
+        svgD3.append("g")
+        .call(d3.axisLeft(yScale));
+
 
       // Load Google Charts library and call the line chart creation function
       google.charts.load('current', { packages: ['corechart'] });
@@ -53,6 +77,8 @@
 
     // Function to create Google Charts line chart
     function createLineChart(data, countries) {
+      data.sort((a, b) => a.Year - b.Year);
+
       // Create a data table
       const dataTable = new google.visualization.DataTable();
       dataTable.addColumn('string', 'Year');
@@ -60,12 +86,13 @@
         dataTable.addColumn('number', country);
       });
 
+      // Fill data into the data table
       const years = Array.from(new Set(data.map(d => d['Year'])));
       years.forEach(year => {
-        const row = [year];
+        const row = [year.toString()];
         countries.forEach(country => {
           const value = data.find(d => d['Country'] === country && d['Year'] === year);
-          row.push(value ? parseFloat(value['Value']) : null);
+          row.push(value ? parseFloat(value['GDP per capita (US dollars)']) : null);
         });
         dataTable.addRow(row);
       });
