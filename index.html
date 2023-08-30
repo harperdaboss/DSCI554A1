@@ -3,7 +3,25 @@
 <head>
   <title>GDP per Capita Comparison: Hong Kong, Korea, Japan, Singapore, and mainland China</title>
   <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+    /* Add some basic styling */
+    #chart_and_explanation {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    #explanation {
+      margin-left: 20px;
+    }
+
+    #explanation-toggle {
+      cursor: pointer;
+      color: blue;
+      text-decoration: underline;
+    }
+  </style>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
 </head>
 
 <body>
@@ -14,72 +32,37 @@
     
   <p>This significant event marked a turning point in Hong Kong's economic landscape and provides a unique backdrop for examining the subsequent trajectories of economic growth.</p>
   
-  <!-- Div for the D3.js line chart -->
-  <div id="d3_chart"></div>
+  <!-- Div for the D3.js bar chart -->
+  <div id="d3_bar_chart">
+    <h2> The economy of HK SAR and China Mainland after the historical event in 1997</h2>
+        <!-- Div for the written explanation -->
+        <div id="explanation">
+          <p id="explanation-text" style="display: none;">
+            This D3.js bar chart provides a comparison of GDP per Capita between China and Hong Kong SAR across different years. The chart helps visualize the economic disparities and growth trajectories between these two regions.       The comparison is particularly significant due to Hong Kong's historical transition of sovereignty from the United Kingdom to China in 1997. This transition marked a crucial turning point in Hong Kong's economic landscape, making it valuable to analyze the subsequent economic trends and variations in GDP per Capita.
+            When comparing the GDP per Capita of Hong Kong and China, we can observe that the values for Hong Kong consistently exceed those of mainland China. This difference in GDP per Capita reflects Hong Kong's unique economic positioning, with higher values driven by factors such as its status as a global financial hub and its historical development as a trade center. Despite the close proximity and intertwined economic relationship between Hong Kong and China, the disparities in GDP per Capita highlight the distinct economic dynamics of these regions.</p>
+          <p><span id="explanation-toggle">Click here</span> to show/hide explanation.</p>
+        </div>
+      </div>
+  </div>
   
   <!-- Div for the Google Charts line chart -->
-  <div id="google_chart"></div>
+  <div id="google_chart">
+    <h2>Google Charts Line Chart</h2>
+  </div>
 
   <script>
     // Load data from CSV file
     d3.csv('https://raw.githubusercontent.com/harperdaboss/DSCI554A1/main/filtered_data.csv', d => ({
       Country: d.Country,
-      Year: parseInt(d.Year), // Parse as integer
-      Value: parseInt(d['GDP per capita (US dollars)']) // Parse as integer
+      Year: +d.Year, // Parse as integer
+      Value: +d["GDP per Capita (US dollars)"] // Parse as integer
     })).then(data => {
-
-      console.log("Data loaded:", data);
-      
-      // Set up the SVG canvas dimensions
-      const margin = { top: 20, right: 30, bottom: 40, left: 40 };
-      const width = 800 - margin.left - margin.right;
-      const height = 400 - margin.top - margin.bottom;
-      console.log("Data loaded:", data);
-      
-      // Create the SVG canvas for D3.js chart
-      const svgD3 = d3.select("#d3_chart")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-        console.log("Data loaded:", data);
-
-      // Set up scales for x and y axes
-      const xScale = d3.scaleLinear()
-        .domain(d3.extent(data, d => d.Year))
-        .range([0, width]);
-
-      const yScale = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.Value)])
-        .range([height, 0]);
-
-      // Define the line generator
-      const line = d3.line()
-        .defined(d => !isNaN(d.Value)) // Check for valid numeric values
-        .x(d => xScale(d.Year))
-        .y(d => yScale(d.Value));
-
-      // Append an SVG path element to represent the line chart
-      svgD3.append("path")
-        .datum(data)
-        .attr("class", "line")
-        .attr("d", line);
-        console.log("Data loaded:", data);
-
-      // Add x-axis
-      svgD3.append("g")
-        .attr("transform", `translate(0, ${height})`)
-        .call(d3.axisBottom(xScale));
-
-      // Add y-axis
-        svgD3.append("g")
-        .call(d3.axisLeft(yScale));
-
 
       // Load Google Charts library and call the line chart creation function
       google.charts.load('current', { packages: ['corechart'] });
-      google.charts.setOnLoadCallback(() => createLineChart(data, ['Hong Kong', 'South Korea', 'Japan', 'Singapore', 'China']));
+      google.charts.setOnLoadCallback(() => createLineChart(data, ['China, Hong Kong SAR', 'Republic of Korea', 'Japan', 'Singapore', 'China']));
+
+      ;
     });
 
     // Function to create Google Charts line chart
@@ -99,7 +82,7 @@
         const row = [year.toString()];
         countries.forEach(country => {
           const value = data.find(d => d['Country'] === country && d['Year'] === year);
-          row.push(value ? parseFloat(value['GDP per capita (US dollars)']) : null);
+          row.push(value ? parseFloat(value['Value']) : null);
         });
         dataTable.addRow(row);
       });
@@ -110,18 +93,153 @@
         curveType: 'function',
         legend: { position: 'bottom' },
         hAxis: { title: 'Year',
-                 ticks: [1995, 2000, 2005, 2010, 2015, 2010],
+                 ticks: [1995, 2000, 2005, 2010, 2015, 2020],
       },
         vAxis: { 
           title: 'GDP per Capita (US dollars)' ,
           ticks: [0, 5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000],
         },
+        height: 400, // Adjust the chart height
       };
 
       // Create and draw the Google Charts line chart
       const chart = new google.visualization.LineChart(document.getElementById('google_chart'));
       chart.draw(dataTable, options);
     }
+    
+
+    // Corrected D3.js bar chart code
+    const data = [
+      { Year: 1995, HongKong: 23775, China: 592 },
+      { Year: 2005, HongKong: 26821, China: 1787 },
+      { Year: 2010, HongKong: 32821, China: 4447 },
+      { Year: 2015, HongKong: 43054, China: 7863 },
+      { Year: 2018, HongKong: 49065, China: 9733 },
+      { Year: 2019, HongKong: 49180, China: 9960 },
+      { Year: 2020, HongKong: 46611, China: 10229 },
+    ];
+
+    const margin = { top: 20, right: 20, bottom: 50, left: 50 };
+    const width = 800 - margin.left - margin.right;
+    const height = 500 - margin.top - margin.bottom;
+
+
+const svg = d3.select("#d3_bar_chart")
+  .append("svg")
+  .attr("width", width + margin.left + margin.right+100)
+  .attr("height", height + margin.top + margin.bottom + 20) // Added padding at the bottom
+  .append("g")
+  .attr("transform", `translate(${margin.left+50},${margin.top})`);
+
+const x = d3.scaleBand()
+  .domain(data.map(d => d.Year))
+  .range([0, width])
+  .padding(0.2);
+
+const y = d3.scaleLinear()
+  .domain([0, d3.max(data, d => Math.max(d.HongKong, d.China))])
+  .nice()
+  .range([height, 0]);
+
+const tooltip = svg.append("text")
+  .attr("id", "tooltip")
+  .attr("x", 0)
+  .attr("y", 0)
+  .style("font-weight", "bold")
+  .style("display", "none");
+
+
+svg.selectAll(".bar-hongkong")
+  .data(data)
+  .enter()
+  .append("rect")
+  .attr("class", "bar-hongkong")
+  .attr("x", d => x(d.Year))
+  .attr("y", d => y(d.HongKong))
+  .attr("width", x.bandwidth() / 2)
+  .attr("height", d => height - y(d.HongKong))
+  .style("fill", "steelblue")
+  .on("mouseover", function(event, d) {
+    tooltip.style("display", "block");
+    tooltip.attr("x", x(d.Year) + x.bandwidth() / 4)
+      .attr("y", y(d.HongKong) - 5) // Adjusted y position for tooltip
+      .attr("text-anchor", "middle") // Center the text horizontally
+      .style("font-family", "Arial") // Set the font family
+      .style("font-size", "11px")   // Set the font size
+      .text(`HK: ${d.HongKong}`);
+  })
+  .on("mouseout", function(event, d) {
+    tooltip.style("display", "none");
+  });
+
+svg.selectAll(".bar-china")
+  .data(data)
+  .enter()
+  .append("rect")
+  .attr("class", "bar-china")
+  .attr("x", d => x(d.Year) + x.bandwidth() / 2)
+  .attr("y", d => y(d.China))
+  .attr("width", x.bandwidth() / 2)
+  .attr("height", d => height - y(d.China))
+  .style("fill", "orange")
+  
+  .on("mouseover", function(event, d) {
+    tooltip.style("display", "block");
+    tooltip.attr("x", x(d.Year) + x.bandwidth() * 3 / 4+10)
+      .attr("y", y(d.China) - 5) // Adjusted y position for tooltip
+      .attr("text-anchor", "middle") // Center the text horizontally
+      .style("font-family", "Arial") // Set the font family
+      .style("font-size", "11px")   // Set the font size
+      .text(`CHN: ${d.China}`);
+  })
+  .on("mouseout", function(event, d) {
+    tooltip.style("display", "none");
+  });
+
+    svg.append("g")
+      .attr("transform", `translate(0,${height})`)
+      .call(d3.axisBottom(x));
+
+    svg.append("g")
+      .call(d3.axisLeft(y))
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", -margin.left - 10) // Adjusted y position for the title
+      .style("text-anchor", "middle")
+      .style("font-family", "Arial") // Set the font family
+      .text("GDP per Capita (US dollars)"); // The y-axis title text
+
+    // Add x label
+    svg.append("text")
+      .attr("x", width / 2)
+      .attr("y", height + margin.top + 20)
+      .style("text-anchor", "middle")
+      .style("font-family", "Arial") // Set the font family
+      .text("Year");
+
+    // Add y label
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", -margin.left)
+      .style("text-anchor", "middle")
+      .style("font-family", "Arial") // Set the font family
+      .text("GDP per Capita (US dollars)");
+
+    // Toggle explanation visibility
+    const explanationToggle = document.getElementById("explanation-toggle");
+    const explanationText = document.getElementById("explanation-text");
+
+    explanationToggle.addEventListener("click", () => {
+      if (explanationText.style.display === "none") {
+        explanationText.style.display = "block";
+        explanationToggle.textContent = "Click here to hide explanation";
+      } else {
+        explanationText.style.display = "none";
+        explanationToggle.textContent = "Click here to show explanation";
+      }
+    });
   </script>
 </body>
 </html>
